@@ -4,6 +4,7 @@ const TARGET_FRAME_RATE = 30;
 
 export function WebcamFloatingOverlay() {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
+	const softVideoRef = useRef<HTMLVideoElement | null>(null);
 	const streamRef = useRef<MediaStream | null>(null);
 	const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
 	const resizePointerIdRef = useRef<number | null>(null);
@@ -37,6 +38,9 @@ export function WebcamFloatingOverlay() {
 				streamRef.current = stream;
 				if (videoRef.current) {
 					videoRef.current.srcObject = stream;
+				}
+				if (softVideoRef.current) {
+					softVideoRef.current.srcObject = stream;
 				}
 			} catch (error) {
 				console.warn("Failed to open webcam overlay stream:", error);
@@ -120,11 +124,29 @@ export function WebcamFloatingOverlay() {
 					className={`h-full w-full object-cover transition-opacity duration-150 ${
 						hasVideo ? "opacity-100" : "opacity-0"
 					}`}
+					style={{
+						filter: "brightness(1.06) contrast(0.96) saturate(1.08) blur(0.18px)",
+						transform: "scaleX(0.955) scaleY(1.035)",
+					}}
 					autoPlay
 					muted
 					playsInline
 					onLoadedData={() => setHasVideo(true)}
 				/>
+				<video
+					ref={softVideoRef}
+					className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-150 ${
+						hasVideo ? "opacity-20" : "opacity-0"
+					}`}
+					style={{
+						filter: "blur(2.2px) brightness(1.08) saturate(1.04)",
+						transform: "scaleX(0.955) scaleY(1.035)",
+					}}
+					autoPlay
+					muted
+					playsInline
+				/>
+				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(255,255,255,0.10),transparent_58%)]" />
 			</div>
 			{showControls ? (
 				<div
