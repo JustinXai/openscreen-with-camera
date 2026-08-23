@@ -421,6 +421,14 @@ interface Window {
 		setCountdownOverlayValue: (value: number, runId: number) => Promise<void>;
 		hideCountdownOverlay: (runId: number) => Promise<void>;
 		onCountdownOverlayValue: (callback: (value: number | null) => void) => () => void;
+		showWebcamOverlay: (cameraDeviceId?: string) => Promise<void>;
+		hideWebcamOverlay: () => Promise<void>;
+		beginWebcamOverlayDrag: () => void;
+		dragWebcamOverlayTo: (deltaX: number, deltaY: number) => void;
+		endWebcamOverlayDrag: () => void;
+		beginWebcamOverlayResize: (screenX: number, screenY: number) => void;
+		resizeWebcamOverlayTo: (screenX: number, screenY: number) => void;
+		endWebcamOverlayResize: () => void;
 		setMicrophoneExpanded: (expanded: boolean) => void;
 		setHasUnsavedChanges: (hasChanges: boolean) => void;
 		onRequestSaveBeforeClose: (callback: () => Promise<boolean> | boolean) => () => void;

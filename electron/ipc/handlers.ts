@@ -520,10 +520,10 @@ export interface RecordingPrefs {
 	cursorCaptureMode: CursorCaptureMode;
 }
 let recordingPrefs: RecordingPrefs = {
-	micEnabled: false,
+	micEnabled: true,
 	micDeviceId: null,
 	micDeviceName: null,
-	camEnabled: false,
+	camEnabled: true,
 	camDeviceId: null,
 	systemAudioEnabled: false,
 	cursorCaptureMode: "editable-overlay",
@@ -1663,6 +1663,8 @@ export function registerIpcHandlers(
 	createSourceSelectorWindow: () => BrowserWindow,
 	createCountdownOverlayWindow: () => BrowserWindow,
 	createNotesWindowWrapper: () => BrowserWindow,
+	createWebcamOverlayWindow: (cameraDeviceId?: string) => BrowserWindow,
+	hideWebcamOverlayWindow: () => void,
 	getMainWindow: () => BrowserWindow | null,
 	getSourceSelectorWindow: () => BrowserWindow | null,
 	getNotesWindow: () => BrowserWindow | null,
@@ -2007,9 +2009,34 @@ export function registerIpcHandlers(
 		overlayWindow.hide();
 	});
 
+	ipcMain.handle("webcam-overlay-show", (_, cameraDeviceId?: string) => {
+		const overlayWindow = createWebcamOverlayWindow(cameraDeviceId);
+		if (overlayWindow.isDestroyed()) return;
+		if (overlayWindow.webContents.isLoading()) {
+			overlayWindow.webContents.once("did-finish-load", () => {
+				if (!overlayWindow.isDestroyed()) overlayWindow.showInactive();
+			});
+			return;
+		}
+		overlayWindow.showInactive();
+	});
+
+	ipcMain.handle("webcam-overlay-hide", () => {
+		hideWebcamOverlayWindow();
+	});
+
 	ipcMain.handle("is-native-windows-capture-available", async () => {
 		if (!isWindowsGraphicsCaptureOsSupported()) {
 			return { success: true, available: false, reason: "unsupported-os" };
+		}
+
+		// The browser recorder is the reliable default for this Windows build. On
+		// some NVIDIA/WGC setups the native helper records normally but wedges in
+		// GPU readback while stopping, which loses the take. Keep the helper as an
+		// explicit diagnostic opt-in while the renderer falls back to its existing
+		// MediaRecorder path for normal use.
+		if (process.env.OPENSCREEN_USE_NATIVE_WINDOWS_CAPTURE !== "1") {
+			return { success: true, available: false, reason: "browser-fallback-preferred" };
 		}
 
 		const helperPath = await findNativeWindowsCaptureHelperPath();

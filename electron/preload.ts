@@ -437,6 +437,30 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		ipcRenderer.on("countdown-overlay-value", listener);
 		return () => ipcRenderer.removeListener("countdown-overlay-value", listener);
 	},
+	showWebcamOverlay: (cameraDeviceId?: string) => {
+		return ipcRenderer.invoke("webcam-overlay-show", cameraDeviceId);
+	},
+	hideWebcamOverlay: () => {
+		return ipcRenderer.invoke("webcam-overlay-hide");
+	},
+	beginWebcamOverlayDrag: () => {
+		ipcRenderer.send("webcam-overlay-drag-start");
+	},
+	dragWebcamOverlayTo: (deltaX: number, deltaY: number) => {
+		ipcRenderer.send("webcam-overlay-drag-to", deltaX, deltaY);
+	},
+	endWebcamOverlayDrag: () => {
+		ipcRenderer.send("webcam-overlay-drag-end");
+	},
+	beginWebcamOverlayResize: (screenX: number, screenY: number) => {
+		ipcRenderer.send("webcam-overlay-resize-start", screenX, screenY);
+	},
+	resizeWebcamOverlayTo: (screenX: number, screenY: number) => {
+		ipcRenderer.send("webcam-overlay-resize-to", screenX, screenY);
+	},
+	endWebcamOverlayResize: () => {
+		ipcRenderer.send("webcam-overlay-resize-end");
+	},
 	onRequestSaveBeforeClose: (callback: () => Promise<boolean> | boolean) => {
 		const listener = async () => {
 			try {

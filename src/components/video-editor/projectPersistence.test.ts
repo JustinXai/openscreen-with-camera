@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CURSOR_THEME_ID } from "@/lib/cursor/cursorThemes";
+import { DEFAULT_WEBCAM_SETTINGS } from "./editorDefaults";
 import {
 	createProjectData,
 	createProjectSnapshot,
@@ -73,7 +74,7 @@ describe("projectPersistence media compatibility", () => {
 		expect(normalizeProjectEditor({ webcamMaskShape: "rounded" }).webcamMaskShape).toBe("rounded");
 		expect(
 			normalizeProjectEditor({ webcamMaskShape: "not-a-real-shape" as never }).webcamMaskShape,
-		).toBe("rectangle");
+		).toBe(DEFAULT_WEBCAM_SETTINGS.maskShape);
 	});
 
 	it("normalizes webcam mirroring safely", () => {

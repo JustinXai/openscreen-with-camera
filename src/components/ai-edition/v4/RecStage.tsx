@@ -31,10 +31,10 @@ interface RecordingPrefsState {
 }
 
 const DEFAULT_PREFS: RecordingPrefsState = {
-	micEnabled: false,
+	micEnabled: true,
 	micDeviceId: null,
 	micDeviceName: null,
-	camEnabled: false,
+	camEnabled: true,
 	camDeviceId: null,
 	systemAudioEnabled: false,
 	cursorCaptureMode: "editable-overlay",

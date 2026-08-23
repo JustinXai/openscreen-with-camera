@@ -50,10 +50,10 @@ type ShimRecordingPrefs = {
 };
 const recordingPrefsStorageKey = "browser-shim-recording-prefs";
 let shimRecordingPrefs: ShimRecordingPrefs = {
-	micEnabled: false,
+	micEnabled: true,
 	micDeviceId: null,
 	micDeviceName: null,
-	camEnabled: false,
+	camEnabled: true,
 	camDeviceId: null,
 	systemAudioEnabled: false,
 	cursorCaptureMode: "editable-overlay",

@@ -91,6 +91,7 @@ const ASSET_BASE_DIR = process.defaultApp
 export const ASSET_BASE_URL_ARG = `--asset-base-url=${pathToFileURL(`${ASSET_BASE_DIR}${path.sep}`).toString()}`;
 
 let hudOverlayWindow: BrowserWindow | null = null;
+let webcamOverlayWindow: BrowserWindow | null = null;
 
 // Origin the current drag gesture started from. The renderer sends the pointer's
 // *total* travel since pointerdown rather than per-frame deltas, so every move is
@@ -217,6 +218,92 @@ ipcMain.on("hud-overlay-drag-to", (_event, deltaX: number, deltaY: number) => {
 
 ipcMain.on("hud-overlay-drag-end", () => {
 	hudDragOrigin = null;
+});
+
+let webcamOverlayDragOrigin: { x: number; y: number } | null = null;
+let webcamOverlayResizeOrigin: {
+	bounds: Electron.Rectangle;
+	pointer: { x: number; y: number };
+} | null = null;
+
+function getWebcamOverlayWindow(): BrowserWindow | null {
+	return webcamOverlayWindow && !webcamOverlayWindow.isDestroyed() ? webcamOverlayWindow : null;
+}
+
+function clampWebcamOverlayBounds(bounds: Electron.Rectangle): Electron.Rectangle {
+	const { workArea } = screen.getDisplayMatching(bounds);
+	const minSize = 140;
+	const maxSize = Math.min(420, Math.floor(Math.min(workArea.width, workArea.height) * 0.42));
+	const size = Math.min(maxSize, Math.max(minSize, Math.round(bounds.width)));
+
+	return {
+		x: Math.min(Math.max(workArea.x, Math.round(bounds.x)), workArea.x + workArea.width - size),
+		y: Math.min(Math.max(workArea.y, Math.round(bounds.y)), workArea.y + workArea.height - size),
+		width: size,
+		height: size,
+	};
+}
+
+ipcMain.on("webcam-overlay-drag-start", () => {
+	const win = getWebcamOverlayWindow();
+	if (!win) return;
+	const [x, y] = win.getPosition();
+	webcamOverlayDragOrigin = Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+});
+
+ipcMain.on("webcam-overlay-drag-to", (_event, deltaX: number, deltaY: number) => {
+	const win = getWebcamOverlayWindow();
+	if (!win || !webcamOverlayDragOrigin || !Number.isFinite(deltaX) || !Number.isFinite(deltaY)) {
+		return;
+	}
+
+	const next = clampWebcamOverlayBounds({
+		...win.getBounds(),
+		x: Math.round(webcamOverlayDragOrigin.x + deltaX) | 0,
+		y: Math.round(webcamOverlayDragOrigin.y + deltaY) | 0,
+	});
+	win.setBounds(next, false);
+});
+
+ipcMain.on("webcam-overlay-drag-end", () => {
+	webcamOverlayDragOrigin = null;
+});
+
+ipcMain.on("webcam-overlay-resize-start", (_event, screenX: number, screenY: number) => {
+	const win = getWebcamOverlayWindow();
+	if (!win || !Number.isFinite(screenX) || !Number.isFinite(screenY)) return;
+	webcamOverlayResizeOrigin = {
+		bounds: win.getBounds(),
+		pointer: { x: screenX, y: screenY },
+	};
+});
+
+ipcMain.on("webcam-overlay-resize-to", (_event, screenX: number, screenY: number) => {
+	const win = getWebcamOverlayWindow();
+	if (
+		!win ||
+		!webcamOverlayResizeOrigin ||
+		!Number.isFinite(screenX) ||
+		!Number.isFinite(screenY)
+	) {
+		return;
+	}
+
+	const delta = Math.max(
+		screenX - webcamOverlayResizeOrigin.pointer.x,
+		screenY - webcamOverlayResizeOrigin.pointer.y,
+	);
+	const nextSize = webcamOverlayResizeOrigin.bounds.width + delta;
+	const next = clampWebcamOverlayBounds({
+		...webcamOverlayResizeOrigin.bounds,
+		width: nextSize,
+		height: nextSize,
+	});
+	win.setBounds(next, false);
+});
+
+ipcMain.on("webcam-overlay-resize-end", () => {
+	webcamOverlayResizeOrigin = null;
 });
 
 // Resize the HUD to fit its rendered content. Anchored by its bottom-centre so it
@@ -563,6 +650,81 @@ export function createCountdownOverlayWindow(): BrowserWindow {
 	}
 
 	return win;
+}
+
+/**
+ * Live circular webcam bubble shown while recording. It is intentionally NOT content-protected:
+ * the user asked for the camera to be visible on the shared screen, like a presenter bubble.
+ */
+export function createWebcamOverlayWindow(cameraDeviceId?: string): BrowserWindow {
+	const existing = getWebcamOverlayWindow();
+	if (existing) return existing;
+
+	const { workArea } = screen.getPrimaryDisplay();
+	const overlaySize = 240;
+	const margin = 22;
+	const x = Math.round(workArea.x + workArea.width - overlaySize - margin);
+	const y = Math.round(workArea.y + workArea.height - overlaySize - margin);
+
+	const win = new BrowserWindow({
+		width: overlaySize,
+		height: overlaySize,
+		minWidth: 140,
+		minHeight: 140,
+		maxWidth: 420,
+		maxHeight: 420,
+		x,
+		y,
+		frame: false,
+		resizable: false,
+		alwaysOnTop: true,
+		skipTaskbar: true,
+		transparent: true,
+		backgroundColor: "#00000000",
+		hasShadow: false,
+		show: false,
+		webPreferences: {
+			preload: path.join(__dirname, "preload.mjs"),
+			additionalArguments: [ASSET_BASE_URL_ARG],
+			nodeIntegration: false,
+			contextIsolation: true,
+			backgroundThrottling: false,
+		},
+	});
+
+	if (process.platform === "darwin") {
+		win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+	}
+
+	win.once("ready-to-show", () => {
+		if (!HEADLESS) win.showInactive();
+	});
+
+	webcamOverlayWindow = win;
+	win.on("closed", () => {
+		if (webcamOverlayWindow === win) {
+			webcamOverlayWindow = null;
+			webcamOverlayDragOrigin = null;
+			webcamOverlayResizeOrigin = null;
+		}
+	});
+
+	const query = {
+		windowType: "webcam-overlay",
+		...(cameraDeviceId ? { cameraDeviceId } : {}),
+	};
+	if (VITE_DEV_SERVER_URL) {
+		win.loadURL(`${VITE_DEV_SERVER_URL}?${new URLSearchParams(query).toString()}`);
+	} else {
+		win.loadFile(path.join(RENDERER_DIST, "index.html"), { query });
+	}
+
+	return win;
+}
+
+export function hideWebcamOverlayWindow() {
+	const win = getWebcamOverlayWindow();
+	if (win) win.close();
 }
 
 // Frameless Notes Window for taking notes during a recording.

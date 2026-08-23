@@ -51,6 +51,8 @@ import {
 	createHudOverlayWindow,
 	createNotesWindow,
 	createSourceSelectorWindow,
+	createWebcamOverlayWindow,
+	hideWebcamOverlayWindow,
 } from "./windows";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1094,6 +1096,8 @@ appReady?.then(async () => {
 		createSourceSelectorWindowWrapper,
 		createCountdownOverlayWindowWrapper,
 		createNotesWindowWrapper,
+		createWebcamOverlayWindow,
+		hideWebcamOverlayWindow,
 		() => mainWindow,
 		() => sourceSelectorWindow,
 		() => notesWindow,

@@ -322,6 +322,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 	};
 
 	const teardownMedia = useCallback(() => {
+		void window.electronAPI?.hideWebcamOverlay?.().catch((error) => {
+			console.warn("Failed to hide webcam overlay:", error);
+		});
 		if (stream.current) {
 			stream.current.getTracks().forEach((track) => track.stop());
 			stream.current = null;
@@ -340,6 +343,12 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			});
 			mixingContext.current = null;
 		}
+	}, []);
+
+	const showWebcamOverlay = useCallback((deviceId?: string) => {
+		void window.electronAPI?.showWebcamOverlay?.(deviceId).catch((error) => {
+			console.warn("Failed to show webcam overlay:", error);
+		});
 	}, []);
 
 	/**
@@ -605,6 +614,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		}
 
 		const clearNativeRecordingState = () => {
+			void window.electronAPI?.hideWebcamOverlay?.().catch((error) => {
+				console.warn("Failed to hide webcam overlay:", error);
+			});
 			nativeWindowsRecording.current = null;
 			setRecording(false);
 			setPaused(false);
@@ -703,6 +715,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 				: Promise.resolve({});
 
 			const clearNativeRecordingState = () => {
+				void window.electronAPI?.hideWebcamOverlay?.().catch((error) => {
+					console.warn("Failed to hide webcam overlay:", error);
+				});
 				nativeMacRecording.current = null;
 				setRecording(false);
 				setPaused(false);
@@ -821,6 +836,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 				: Promise.resolve({});
 
 			const clearNativeRecordingState = () => {
+				void window.electronAPI?.hideWebcamOverlay?.().catch((error) => {
+					console.warn("Failed to hide webcam overlay:", error);
+				});
 				nativeLinuxRecording.current = null;
 				setRecording(false);
 				setPaused(false);
@@ -1084,7 +1102,10 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 
 			const availability = await window.electronAPI.isNativeWindowsCaptureAvailable();
 			if (!availability.success || !availability.available) {
-				if (availability.reason === "unsupported-os") {
+				if (
+					availability.reason === "unsupported-os" ||
+					availability.reason === "browser-fallback-preferred"
+				) {
 					return false;
 				}
 				if (availability.reason === "missing-helper") {
@@ -1193,6 +1214,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			setRecording(true);
 			setPaused(false);
 			setElapsedSeconds(0);
+			if (webcamEnabled && !result.webcamUnavailable) {
+				showWebcamOverlay(webcamIdentity.deviceId);
+			}
 			return true;
 		} catch (error) {
 			console.error("Native Windows capture failed:", error);
@@ -1355,6 +1379,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			setRecording(true);
 			setPaused(false);
 			setElapsedSeconds(0);
+			if (nativeWebcamRecorder) {
+				showWebcamOverlay(readWebcamDeviceIdentity().deviceId);
+			}
 			return true;
 		} catch (error) {
 			console.error("Native macOS capture failed:", error);
@@ -1501,6 +1528,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			setRecording(true);
 			setPaused(false);
 			setElapsedSeconds(0);
+			if (nativeWebcamRecorder) {
+				showWebcamOverlay(readWebcamDeviceIdentity().deviceId);
+			}
 			return true;
 		} catch (error) {
 			console.error("Native Linux capture failed:", error);
@@ -1920,6 +1950,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			setRecording(true);
 			setPaused(false);
 			setElapsedSeconds(0);
+			if (webcamRecorder.current) {
+				showWebcamOverlay(readWebcamDeviceIdentity().deviceId);
+			}
 			window.electronAPI?.setRecordingState(true, recordingId.current, cursorCaptureMode);
 
 			const activeScreenRecorder = screenRecorder.current;

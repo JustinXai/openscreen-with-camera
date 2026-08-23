@@ -162,6 +162,8 @@ function registerAppHandlersForCli(cliWindowRef: () => BrowserWindow | null) {
 		notAvailable, // createSourceSelectorWindow
 		notAvailable, // createCountdownOverlayWindow
 		notAvailable, // createNotesWindow
+		notAvailable, // createWebcamOverlayWindow
+		noop, // hideWebcamOverlayWindow
 		cliWindowRef,
 		() => null,
 		() => null,
