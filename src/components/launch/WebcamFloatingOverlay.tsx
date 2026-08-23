@@ -8,6 +8,9 @@ export function WebcamFloatingOverlay() {
 	const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
 	const resizePointerIdRef = useRef<number | null>(null);
 	const [hasVideo, setHasVideo] = useState(false);
+	const [showControls, setShowControls] = useState(() => {
+		return new URLSearchParams(window.location.search).get("controls") !== "0";
+	});
 
 	useEffect(() => {
 		let cancelled = false;
@@ -47,6 +50,12 @@ export function WebcamFloatingOverlay() {
 			streamRef.current?.getTracks().forEach((track) => track.stop());
 			streamRef.current = null;
 		};
+	}, []);
+
+	useEffect(() => {
+		return window.electronAPI?.onWebcamOverlayControlsVisible?.((visible) => {
+			setShowControls(visible);
+		});
 	}, []);
 
 	const handleDragPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
@@ -96,14 +105,14 @@ export function WebcamFloatingOverlay() {
 
 	return (
 		<div
-			className="h-screen w-screen select-none bg-transparent p-[5px]"
+			className="relative h-screen w-screen select-none bg-transparent p-[8px]"
 			onPointerDown={handleDragPointerDown}
 			onPointerMove={handleDragPointerMove}
 			onPointerUp={handleDragPointerEnd}
 			onPointerCancel={handleDragPointerEnd}
 		>
 			<div
-				className="relative h-full w-full overflow-hidden rounded-full border-[3px] border-[#ff4d57] bg-black shadow-[0_12px_34px_rgba(0,0,0,0.36)]"
+				className="relative h-full w-full overflow-hidden rounded-full border-[3px] border-[#0b0b0f] bg-black shadow-[0_12px_34px_rgba(0,0,0,0.36)]"
 				style={{ cursor: "grab" }}
 			>
 				<video
@@ -116,18 +125,24 @@ export function WebcamFloatingOverlay() {
 					playsInline
 					onLoadedData={() => setHasVideo(true)}
 				/>
+			</div>
+			{showControls ? (
 				<div
 					data-webcam-resize="true"
-					className="absolute bottom-0 right-0 h-16 w-16"
+					className="absolute bottom-0 right-0 z-10 flex h-16 w-16 items-end justify-end p-1"
 					style={{ cursor: "nwse-resize" }}
+					title="拖动调整摄像头大小"
 					onPointerDown={handleResizePointerDown}
 					onPointerMove={handleResizePointerMove}
 					onPointerUp={handleResizePointerEnd}
 					onPointerCancel={handleResizePointerEnd}
 				>
-					<div className="absolute bottom-3 right-3 h-6 w-6 rounded-full border border-white/85 bg-black/45 shadow-[0_2px_10px_rgba(0,0,0,0.35)]" />
+					<div className="relative h-8 w-8 rounded-full border-2 border-[#0b0b0f] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.42)]">
+						<div className="absolute bottom-[8px] right-[7px] h-[2px] w-[12px] rotate-[-45deg] rounded-full bg-[#0b0b0f]" />
+						<div className="absolute bottom-[13px] right-[7px] h-[2px] w-[8px] rotate-[-45deg] rounded-full bg-[#0b0b0f]" />
+					</div>
 				</div>
-			</div>
+			) : null}
 		</div>
 	);
 }

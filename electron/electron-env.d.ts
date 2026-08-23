@@ -421,8 +421,9 @@ interface Window {
 		setCountdownOverlayValue: (value: number, runId: number) => Promise<void>;
 		hideCountdownOverlay: (runId: number) => Promise<void>;
 		onCountdownOverlayValue: (callback: (value: number | null) => void) => () => void;
-		showWebcamOverlay: (cameraDeviceId?: string) => Promise<void>;
+		showWebcamOverlay: (cameraDeviceId?: string, controlsVisible?: boolean) => Promise<void>;
 		hideWebcamOverlay: () => Promise<void>;
+		onWebcamOverlayControlsVisible: (callback: (visible: boolean) => void) => () => void;
 		beginWebcamOverlayDrag: () => void;
 		dragWebcamOverlayTo: (deltaX: number, deltaY: number) => void;
 		endWebcamOverlayDrag: () => void;

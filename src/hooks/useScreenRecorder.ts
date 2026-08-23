@@ -345,8 +345,8 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		}
 	}, []);
 
-	const showWebcamOverlay = useCallback((deviceId?: string) => {
-		void window.electronAPI?.showWebcamOverlay?.(deviceId).catch((error) => {
+	const showWebcamOverlay = useCallback((deviceId?: string, controlsVisible = true) => {
+		void window.electronAPI?.showWebcamOverlay?.(deviceId, controlsVisible).catch((error) => {
 			console.warn("Failed to show webcam overlay:", error);
 		});
 	}, []);
@@ -1227,7 +1227,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			setPaused(false);
 			setElapsedSeconds(0);
 			if (webcamEnabled && !result.webcamUnavailable) {
-				showWebcamOverlay(webcamIdentity.deviceId);
+				showWebcamOverlay(webcamIdentity.deviceId, false);
 			}
 			return true;
 		} catch (error) {
@@ -1392,7 +1392,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			setPaused(false);
 			setElapsedSeconds(0);
 			if (nativeWebcamRecorder) {
-				showWebcamOverlay(readWebcamDeviceIdentity().deviceId);
+				showWebcamOverlay(readWebcamDeviceIdentity().deviceId, false);
 			}
 			return true;
 		} catch (error) {
@@ -1541,7 +1541,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			setPaused(false);
 			setElapsedSeconds(0);
 			if (nativeWebcamRecorder) {
-				showWebcamOverlay(readWebcamDeviceIdentity().deviceId);
+				showWebcamOverlay(readWebcamDeviceIdentity().deviceId, false);
 			}
 			return true;
 		} catch (error) {
@@ -1963,7 +1963,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			setPaused(false);
 			setElapsedSeconds(0);
 			if (webcamRecorder.current) {
-				showWebcamOverlay(readWebcamDeviceIdentity().deviceId);
+				showWebcamOverlay(readWebcamDeviceIdentity().deviceId, false);
 			}
 			window.electronAPI?.setRecordingState(true, recordingId.current, cursorCaptureMode);
 

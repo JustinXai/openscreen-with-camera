@@ -656,9 +656,15 @@ export function createCountdownOverlayWindow(): BrowserWindow {
  * Live circular webcam bubble shown while recording. It is intentionally NOT content-protected:
  * the user asked for the camera to be visible on the shared screen, like a presenter bubble.
  */
-export function createWebcamOverlayWindow(cameraDeviceId?: string): BrowserWindow {
+export function createWebcamOverlayWindow(
+	cameraDeviceId?: string,
+	controlsVisible = true,
+): BrowserWindow {
 	const existing = getWebcamOverlayWindow();
-	if (existing) return existing;
+	if (existing) {
+		existing.webContents.send("webcam-overlay-controls-visible", controlsVisible);
+		return existing;
+	}
 
 	const { workArea } = screen.getPrimaryDisplay();
 	const overlaySize = 240;
@@ -711,6 +717,7 @@ export function createWebcamOverlayWindow(cameraDeviceId?: string): BrowserWindo
 
 	const query = {
 		windowType: "webcam-overlay",
+		controls: controlsVisible ? "1" : "0",
 		...(cameraDeviceId ? { cameraDeviceId } : {}),
 	};
 	if (VITE_DEV_SERVER_URL) {

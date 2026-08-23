@@ -1663,7 +1663,7 @@ export function registerIpcHandlers(
 	createSourceSelectorWindow: () => BrowserWindow,
 	createCountdownOverlayWindow: () => BrowserWindow,
 	createNotesWindowWrapper: () => BrowserWindow,
-	createWebcamOverlayWindow: (cameraDeviceId?: string) => BrowserWindow,
+	createWebcamOverlayWindow: (cameraDeviceId?: string, controlsVisible?: boolean) => BrowserWindow,
 	hideWebcamOverlayWindow: () => void,
 	getMainWindow: () => BrowserWindow | null,
 	getSourceSelectorWindow: () => BrowserWindow | null,
@@ -2010,8 +2010,8 @@ export function registerIpcHandlers(
 		overlayWindow.hide();
 	});
 
-	ipcMain.handle("webcam-overlay-show", (_, cameraDeviceId?: string) => {
-		const overlayWindow = createWebcamOverlayWindow(cameraDeviceId);
+	ipcMain.handle("webcam-overlay-show", (_, cameraDeviceId?: string, controlsVisible = true) => {
+		const overlayWindow = createWebcamOverlayWindow(cameraDeviceId, controlsVisible);
 		if (overlayWindow.isDestroyed()) return;
 		if (overlayWindow.webContents.isLoading()) {
 			overlayWindow.webContents.once("did-finish-load", () => {
