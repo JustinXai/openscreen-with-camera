@@ -920,33 +920,29 @@ describe("buildSceneDescription.settings mapping", () => {
 		const scene = buildSceneDescription(doc);
 		const rect = scene.layout.webcamRect;
 		expect(rect).not.toBeNull();
-		// Le preset picture-in-picture à size=25% (default) place la webcam en bas-droite avec
-		// une marge ~2% du canvas (cf. `compositeLayout.ts:162`). Pour un canvas 1920×1080 :
-		// - côté ≈ sqrt(1920*1080) * 0.25 ≈ 360px ; avec aspect 4:3 → ~360x270
-		// - x ≈ (1920 - margin - 360) / 1920 ≈ 0.795 ; y similaire pour h
+		// Le preset picture-in-picture a size=25% place la webcam en bas-droite avec
+		// une marge ~2% du canvas. Le masque par defaut est maintenant circulaire pour
+		// l'edition "talking head", donc le slot natif doit etre carre: le cercle est
+		// dessine par un rayon de 50% du petit cote, pas par un rectangle 4:3.
 		// Les valeurs exactes sont issues de computeCompositeLayout ; on vérifie surtout :
-		//  • bornes 0..1 strictes ; • ratio PIXELS ≈ webcamSize (4:3 conservé) ; • x/y > 0.5 (bas-droite).
+		//  • bornes 0..1 strictes ; • ratio pixels carre ; • x/y > 0.5 (bas-droite).
 		expect(rect!.x).toBeGreaterThan(0.5);
 		expect(rect!.y).toBeGreaterThan(0.5);
 		expect(rect!.x + rect!.width).toBeLessThanOrEqual(1.0);
 		expect(rect!.y + rect!.height).toBeLessThanOrEqual(1.0);
-		// ratio cohérent en PIXELS (largeur*canvasW / hauteur*canvasH ~ 960/720 = 4/3 ≈ 1.333) —
-		// PAS le ratio des fractions brutes, qui diffère du ratio pixel dès que le canvas n'est
-		// pas carré (ici 1920x1080 : une fraction-ratio de 0.75 correspond bien à un pixel-ratio
-		// de 4/3, puisque 1920/1080 = 16/9 redistribue les deux axes différemment).
 		const pixelWidth = rect!.width * scene.output.width;
 		const pixelHeight = rect!.height * scene.output.height;
-		expect(pixelWidth / pixelHeight).toBeCloseTo(4 / 3, 1);
+		expect(pixelWidth / pixelHeight).toBeCloseTo(1, 1);
+		expect(scene.layout.webcamShape).toBe("circle");
+		expect(scene.layout.webcamRadiusFrac).toBeCloseTo(0.5, 2);
 	});
 
-	it("lays the camera box out from the camera's own dimensions, with no second argument", () => {
+	it("keeps the circular camera box square when camera dimensions are present", () => {
 		// The parity claim, and the reason `cameraTrack` carries dimensions at all.
 		//
-		// The case above passes a cameraTrack WITHOUT dimensions and gets 4:3 — the fallback,
-		// which is correct for a document written before the field existed. This one carries
-		// them, and must get 16:9 from the ARGUMENT-FREE call, because that is the call every
-		// export makes: `ExportDialog` and the CLI runner both invoke
-		// `buildSceneDescription(document)` with nothing else.
+		// The recorded camera source can be 16:9, but a circular PiP must still ship a
+		// square placement rect. The camera content is cover-cropped into that square, so
+		// the native renderer draws a real circle instead of an oval.
 		//
 		// Before the camera's size lived in the document, only the preview could supply it —
 		// through the optional second argument, filled from a mounted <video>'s reported size.
@@ -983,10 +979,11 @@ describe("buildSceneDescription.settings mapping", () => {
 		const scene = buildSceneDescription(doc);
 		const rect = scene.layout.webcamRect;
 		expect(rect).not.toBeNull();
-		// Pixel ratio, not fraction ratio — see the neighbouring case for why.
+		expect(scene.layout.webcamShape).toBe("circle");
 		const pixelWidth = rect!.width * scene.output.width;
 		const pixelHeight = rect!.height * scene.output.height;
-		expect(pixelWidth / pixelHeight).toBeCloseTo(16 / 9, 1);
+		expect(pixelWidth / pixelHeight).toBeCloseTo(1, 1);
+		expect(scene.layout.webcamRadiusFrac).toBeCloseTo(0.5, 2);
 	});
 
 	it("layout.webcamRect is null when no-webcam preset is selected", () => {
