@@ -1947,6 +1947,7 @@ export function registerIpcHandlers(
 		// createEditorWindow already closes the current mainWindow (the HUD) before
 		// opening the editor. Closing it here too double-closes, leaving ghost
 		// transparent windows and compounding the HUD shadow each cycle.
+		hideWebcamOverlayWindow();
 		createEditorWindow();
 	});
 

@@ -380,6 +380,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 	const setWebcamEnabled = useCallback(
 		async (enabled: boolean) => {
 			if (!enabled) {
+				void window.electronAPI?.hideWebcamOverlay?.().catch((error) => {
+					console.warn("Failed to hide webcam overlay:", error);
+				});
 				setWebcamEnabledState(false);
 				return true;
 			}
@@ -443,9 +446,15 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 				});
 				webcamStream.current = stream;
 				webcamReady.current = true;
+				showWebcamOverlay(
+					webcamDeviceIdentityFrom(stream, webcamDeviceId, webcamDeviceName).deviceId,
+				);
 			} catch (cameraError) {
 				if (!cancelled) {
 					console.warn("Failed to get webcam access:", cameraError);
+					void window.electronAPI?.hideWebcamOverlay?.().catch((error) => {
+						console.warn("Failed to hide webcam overlay:", error);
+					});
 					setWebcamEnabledState(false);
 					const isDeviceError =
 						cameraError instanceof DOMException &&
@@ -466,6 +475,9 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		return () => {
 			cancelled = true;
 			webcamReady.current = false;
+			void window.electronAPI?.hideWebcamOverlay?.().catch((error) => {
+				console.warn("Failed to hide webcam overlay:", error);
+			});
 			if (acquiredStream) {
 				acquiredStream.getTracks().forEach((track) => {
 					track.onended = null;
@@ -474,7 +486,7 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 				webcamStream.current = null;
 			}
 		};
-	}, [webcamEnabled, webcamDeviceId, t]);
+	}, [showWebcamOverlay, webcamDeviceId, webcamDeviceName, webcamEnabled, t]);
 
 	const finalizeRecording = useCallback(
 		(
