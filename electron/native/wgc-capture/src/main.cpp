@@ -732,7 +732,7 @@ int main(int argc, char* argv[]) {
 
     const int pixels = width * height;
     const int defaultBitrate =
-        pixels >= 3840 * 2160 ? 90'000'000 : pixels >= 2560 * 1440 ? 54'000'000 : 36'000'000;
+        pixels >= 3840 * 2160 ? 240'000'000 : pixels >= 2560 * 1440 ? 150'000'000 : 90'000'000;
     const int bitrate = config.bitrate > 0 ? config.bitrate : defaultBitrate;
 
     WebcamCapture webcamCapture;
