@@ -36,6 +36,7 @@ struct CaptureConfig {
     int fps = 60;
     int width = 0;
     int height = 0;
+    int bitrate = 0;
     MonitorBounds bounds{};
     bool hasDisplayBounds = false;
     bool captureSystemAudio = false;
@@ -577,6 +578,7 @@ bool parseConfig(const std::string& json, CaptureConfig& config) {
     config.fps = std::clamp(findInt(json, "fps", 60), 1, 120);
     config.width = findInt(json, "videoWidth", findInt(json, "width", 0));
     config.height = findInt(json, "videoHeight", findInt(json, "height", 0));
+    config.bitrate = findInt(json, "bitrate", 0);
     config.bounds.x = findInt(json, "displayX", 0);
     config.bounds.y = findInt(json, "displayY", 0);
     config.bounds.width = findInt(json, "displayW", 0);
@@ -729,7 +731,9 @@ int main(int argc, char* argv[]) {
     height = (std::max(2, height) / 2) * 2;
 
     const int pixels = width * height;
-    const int bitrate = pixels >= 3840 * 2160 ? 45'000'000 : pixels >= 2560 * 1440 ? 28'000'000 : 18'000'000;
+    const int defaultBitrate =
+        pixels >= 3840 * 2160 ? 90'000'000 : pixels >= 2560 * 1440 ? 54'000'000 : 36'000'000;
+    const int bitrate = config.bitrate > 0 ? config.bitrate : defaultBitrate;
 
     WebcamCapture webcamCapture;
     bool webcamActive = false;

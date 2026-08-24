@@ -19,7 +19,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 2008,
 			height: 1080,
-			bitrate: 30_000_000,
+			bitrate: 54_000_000,
 		});
 
 		expect(
@@ -32,7 +32,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 1920,
 			height: 1032,
-			bitrate: 30_000_000,
+			bitrate: 36_000_000,
 		});
 	});
 
@@ -47,7 +47,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 1338,
 			height: 720,
-			bitrate: 20_000_000,
+			bitrate: 36_000_000,
 		});
 	});
 
@@ -62,7 +62,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 1920,
 			height: 1080,
-			bitrate: 20_000_000,
+			bitrate: 36_000_000,
 		});
 	});
 
@@ -77,7 +77,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 1920,
 			height: 1080,
-			bitrate: 30_000_000,
+			bitrate: 36_000_000,
 		});
 
 		expect(
@@ -90,7 +90,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 3840,
 			height: 2160,
-			bitrate: 80_000_000,
+			bitrate: 90_000_000,
 		});
 	});
 
@@ -105,7 +105,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 1080,
 			height: 1920,
-			bitrate: 20_000_000,
+			bitrate: 36_000_000,
 		});
 	});
 
@@ -164,7 +164,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 854,
 			height: 480,
-			bitrate: 30_000_000,
+			bitrate: 36_000_000,
 		});
 
 		expect(
@@ -177,7 +177,7 @@ describe("calculateMp4ExportSettings", () => {
 		).toMatchObject({
 			width: 1920,
 			height: 1080,
-			bitrate: 20_000_000,
+			bitrate: 36_000_000,
 		});
 	});
 });

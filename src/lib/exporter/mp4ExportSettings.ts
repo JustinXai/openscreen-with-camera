@@ -117,14 +117,14 @@ function calculateBitrate(width: number, height: number, quality: ExportQuality)
 	const totalPixels = width * height;
 
 	if (quality === "source") {
-		if (totalPixels > 2560 * 1440) return 80_000_000;
-		if (totalPixels > 1920 * 1080) return 50_000_000;
-		return 30_000_000;
+		if (totalPixels > 2560 * 1440) return 90_000_000;
+		if (totalPixels > 1920 * 1080) return 60_000_000;
+		return 36_000_000;
 	}
 
-	if (totalPixels <= 1280 * 720) return 10_000_000;
-	if (totalPixels <= 1920 * 1080) return 20_000_000;
-	return 30_000_000;
+	if (totalPixels <= 1280 * 720) return 16_000_000;
+	if (totalPixels <= 1920 * 1080) return 36_000_000;
+	return 54_000_000;
 }
 
 export function calculateMp4ExportSettings({

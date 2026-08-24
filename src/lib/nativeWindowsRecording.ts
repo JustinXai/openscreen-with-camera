@@ -13,6 +13,7 @@ export type NativeWindowsRecordingRequest = {
 		fps: number;
 		width: number;
 		height: number;
+		bitrate?: number;
 	};
 	audio: {
 		system: {
